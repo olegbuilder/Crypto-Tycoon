@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tycoon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1e1e1e;
+            color: white;
+        }
+        #arrow {
+            margin: 20px;
+            font-size: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .up {
+            color: green;
+        }
+        .down {
+            color: red;
+        }
+        #score {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #donate {
+            background-color: gold;
+            color: black;
+        }
+        #boost-bar {
+            width: 100%;
+            height: 20px;
+            background-color: grey;
+            margin-top: 20px;
+        }
+        #boost-progress {
+            height: 100%;
+            width: 0;
+            background-color: lime;
+        }
+        #boost {
+            background-color: blue;
+            color: white;
+        }
+
+        /* Кнопка языка в нижнем углу */
+        #language-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="game-title">Crypto Tycoon</h1>
+    <p id="game-description">Try your luck and see if the market goes up or down!</p>
+    <div id="arrow">↔️</div>
+    <button onclick="mine()" id="mine-button">Mine Crypto</button>
+    <button id="donate" onclick="buyUpgrade()">Donate: Buy Upgrade (30 BTC)</button>
+    <button id="boost" onclick="activateBoost()" disabled>Boost</button>
+    <div id="score">Your Balance: 0 BTC</div>
+    <div id="upgrade-level">Upgrade Level: 0</div>
+    <div id="upgrade-price">Next Upgrade Price: 30 BTC</div>
+    
+    <!-- Boost bar -->
+    <div id="boost-bar">
+        <div id="boost-progress"></div>
+    </div>
+
+    <!-- Кнопка для выбора языка -->
+    <button id="language-button" onclick="toggleLanguage()">Change Language</button>
+
+    <script>
+        let balance = 0;
+        let upgradeLevel = 0;
+        let upgradePrice = 30; // Начальная цена улучшения
+        let clickCount = 0; // Счётчик кликов
+        let boostActive = false; // Активен ли Boost
+        let rewardMultiplier = 1; // Множитель награды
+        let boostChance = 0.5; // Шанс на успех без буста
+        let rewardChance = 0.5; // Шанс выпадения стрелки вверх
+        const boostDuration = 10000; // 10 секунд
+
+        let language = 'en'; // Переменная для языка (по умолчанию английский)
+
+        // Функция для игры
+        function mine() {
+            clickCount++;
+            updateBoostBar(); // Обновление шкалы прогресса
+
+            // Случайное событие: стрелка идёт вверх или вниз
+            const result = Math.random() < rewardChance ? "up" : "down";
+            const arrow = document.getElementById("arrow");
+
+            if (result === "up") {
+                let reward = 10 * rewardMultiplier; // Если вверх, награда зависит от уровня
+                balance += reward;
+                arrow.textContent = "⬆️";
+                arrow.className = "up";
+                alert(getText('earnedBTC', reward));
+            } else {
+                balance -= 5; // Если вниз, отнимаем 5 BTC
+                arrow.textContent = "⬇️";
+                arrow.className = "down";
+                alert(getText('lostBTC'));
+            }
+
+            updateDisplay();
+        }
+
+        // Функция активации Boost
+        function activateBoost() {
+            if (clickCount >= 100) {
+                boostActive = true;
+                boostChance = 0.9; // Устанавливаем шанс 90% на "вверх"
+                clickCount = 0; // Сбрасываем счётчик кликов
+                alert(getText('boostActivated'));
+
+                // Запускаем таймер для деактивации Boost через 10 секунд
+                setTimeout(deactivateBoost, boostDuration);
+
+                // Делаем кнопку Boost неактивной
+                document.getElementById("boost").disabled = true;
+            } else {
+                alert(getText('boostRequired'));
+            }
+        }
+
+        function deactivateBoost() {
+            boostActive = false;
+            boostChance = 0.5; // Сбросить шанс на 50% после 10 секунд
+            alert(getText('boostEnded'));
+            document.getElementById("boost").disabled = false; // Включить кнопку Boost снова
+        }
+
+        // Функция для обновления шкалы Boost
+        function updateBoostBar() {
+            let progress = (clickCount / 100) * 100; // Заполнение шкалы до 100 кликов
+            document.getElementById("boost-progress").style.width = progress + "%";
+
+            // Активировать кнопку Boost, когда шкала заполнена
+            if (clickCount >= 100) {
+                document.getElementById("boost").disabled = false;
+            }
+        }
+
+        // Функция для покупки улучшения
+        function buyUpgrade() {
+            if (balance >= upgradePrice) {
+                balance -= upgradePrice;
+                upgradeLevel++;
+                upgradePrice += 5; // Увеличиваем цену следующего улучшения на 5
+                rewardMultiplier += 0.5; // Увеличиваем множитель награды на 0.5
+                rewardChance += 0.1; // Увеличиваем шанс выпадения стрелки вверх на 10% (каждое улучшение)
+                alert(getText('upgradePurchased'));
+                updateDisplay();
+            } else {
+                alert(getText('notEnoughBTC'));
+            }
+        }
+
+        // Функция для обновления информации на экране
+        function updateDisplay() {
+            document.getElementById("score").textContent = `${getText('yourBalance')}: ${balance} BTC`;
+            document.getElementById("upgrade-level").textContent = `${getText('upgradeLevel')}: ${upgradeLevel}`;
+            document.getElementById("upgrade-price").textContent = `${getText('nextUpgradePrice')}: ${upgradePrice} BTC`;
+        }
+
+        // Функция для переключения языка
+        function toggleLanguage() {
+            language = (language === 'en') ? 'ru' : 'en';
+            updateText();
+        }
+
+        // Функция для обновления текста на странице в зависимости от выбранного языка
+        function updateText() {
+            document.getElementById("game-title").textContent = getText('gameTitle');
+            document.getElementById("game-description").textContent = getText('gameDescription');
+            document.getElementById("mine-button").textContent = getText('mineButton');
+            document.getElementById("donate").textContent = getText('donateButton');
+            document.getElementById("boost").textContent = getText('boostButton');
+            document.getElementById("language-button").textContent = getText('languageButton');
+        }
+
+        // Функция для получения текста в зависимости от языка
+        function getText(key, value = '') {
+            const text = {
+                en: {
+                    gameTitle: 'Crypto Tycoon',
+                    gameDescription: 'Try your luck and see if the market goes up or down!',
+                    mineButton: 'Mine Crypto',
+                    donateButton: 'Donate: Buy Upgrade (30 BTC)',
+                    boostButton: 'Boost',
+                    languageButton: 'Change Language',
+                    yourBalance: 'Your Balance',
+                    upgradeLevel: 'Upgrade Level',
+                    nextUpgradePrice: 'Next Upgrade Price',
+                    earnedBTC: 'You earned ' + value + ' BTC!',
+                    lostBTC: 'You lost 5 BTC.',
+                    boostActivated: 'Boost Activated! You now have a 90% chance to go up for 10 seconds.',
+                    boostRequired: 'You need 100 clicks to activate Boost!',
+                    boostEnded: 'Boost ended!',
+                    upgradePurchased: 'Upgrade purchased! New Level: ' + value,
+                    notEnoughBTC: 'You don\'t have enough BTC for this upgrade.',
+                },
+                ru: {
+                    gameTitle: 'Крипто-Тайкун',
+                    gameDescription: 'Попробуй удачу и смотри, пойдет ли рынок вверх или вниз!',
+                    mineButton: 'Заработать крипту',
+                    donateButton: 'Пожертвовать: Купить улучшение (30 BTC)',
+                    boostButton: 'Буст',
+                    languageButton: 'Изменить язык',
+                    yourBalance: 'Ваш баланс',
+                    upgradeLevel: 'Уровень улучшения',
+                    nextUpgradePrice: 'Цена следующего улучшения',
+                    earnedBTC: 'Вы заработали ' + value + ' BTC!',
+                    lostBTC: 'Вы потеряли 5 BTC.',
+                    boostActivated: 'Буст активирован!
