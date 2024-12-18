@@ -10,18 +10,18 @@
 
     function mine() {
         clickCount++;
-        updateBoostBar(); // Обновление шкалы прогресса
+        updateBoostBar();
 
         const arrow = document.getElementById("arrow");
         const result = Math.random() < boostChance ? "up" : "down";
 
         if (result === "up") {
-            let reward = 10 * rewardMultiplier; 
+            let reward = 10 * rewardMultiplier;
             balance += reward;
             arrow.textContent = "⬆️";
             arrow.className = "up";
         } else {
-            balance -= 5; 
+            balance -= 5;
             arrow.textContent = "⬇️";
             arrow.className = "down";
         }
@@ -35,6 +35,7 @@
             upgradeLevel++;
             upgradePrice += 5; // Увеличиваем цену следующего улучшения
             rewardMultiplier += 0.5; // Увеличиваем множитель награды
+            alert(`Upgrade purchased! New price is ${upgradePrice} BTC`);
         } else {
             alert("Not enough BTC to buy upgrade!");
         }
@@ -45,8 +46,8 @@
     function activateBoost() {
         if (clickCount >= 100) {
             boostActive = true;
-            boostChance = 0.9; 
-            clickCount = 0; 
+            boostChance = 0.9;
+            clickCount = 0;
             setTimeout(deactivateBoost, boostDuration);
             document.getElementById("boost").disabled = true;
         } else {
@@ -56,12 +57,12 @@
 
     function deactivateBoost() {
         boostActive = false;
-        boostChance = 0.5; 
-        document.getElementById("boost").disabled = false; 
+        boostChance = 0.5;
+        document.getElementById("boost").disabled = false;
     }
 
     function updateBoostBar() {
-        let progress = (clickCount / 100) * 100; 
+        let progress = (clickCount / 100) * 100;
         document.getElementById("boost-progress").style.width = progress + "%";
 
         if (clickCount >= 100) {
