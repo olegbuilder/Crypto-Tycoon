@@ -50,6 +50,18 @@
             background-color: blue;
             color: white;
         }
+        #leaderboard {
+            margin-top: 40px;
+        }
+        #leaderboard table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 50%;
+        }
+        #leaderboard th, #leaderboard td {
+            padding: 10px;
+            border: 1px solid #fff;
+        }
     </style>
 </head>
 <body>
@@ -68,6 +80,23 @@
         <div id="boost-progress"></div>
     </div>
 
+    <!-- Leaderboard -->
+    <div id="leaderboard">
+        <h2>Leaderboard</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Balance (BTC)</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <!-- Лидеры будут загружены здесь -->
+            </tbody>
+        </table>
+    </div>
+
     <script>
         let balance = 0;
         let upgradeLevel = 0;
@@ -76,9 +105,23 @@
         let boostActive = false; // Активен ли Boost
         let rewardMultiplier = 1; // Множитель награды
         let boostChance = 0.5; // Шанс на успех без буста
-        let boostTimer = 0; // Таймер для активации Boost
         const boostDuration = 10000; // 10 секунд
+        const playerName = prompt("Enter your name to start the game:"); // Запрашиваем имя игрока
 
+        // Загрузка данных из localStorage
+        const savedData = JSON.parse(localStorage.getItem('gameData')) || {
+            balance: 0,
+            upgradeLevel: 0,
+            clickCount: 0,
+            leaderboard: []
+        };
+
+        // Устанавливаем начальные значения
+        balance = savedData.balance;
+        upgradeLevel = savedData.upgradeLevel;
+        clickCount = savedData.clickCount;
+
+        // Функция для игры
         function mine() {
             clickCount++;
             updateBoostBar(); // Обновление шкалы прогресса
@@ -110,6 +153,9 @@
                 boostActive = false;
                 boostChance = 0.5; // Сбросить шанс после активации Boost
             }
+
+            // Сохраняем данные в localStorage
+            saveGameData();
 
             updateDisplay();
         }
@@ -153,6 +199,59 @@
             document.getElementById("upgrade-level").textContent = `Upgrade Level: ${upgradeLevel}`;
             document.getElementById("upgrade-price").textContent = `Next Upgrade Price: ${upgradePrice} BTC`;
         }
+
+        function buyUpgrade() {
+            if (balance >= upgradePrice) {
+                balance -= upgradePrice;
+                upgradeLevel++;
+                upgradePrice += 5; // Увеличиваем цену следующего улучшения на 5
+                rewardMultiplier += 0.5; // Увеличиваем множитель награды на 0.5
+                alert("Upgrade purchased!");
+                updateDisplay();
+            } else {
+                alert("Not enough BTC for upgrade.");
+            }
+
+            // Сохраняем данные в localStorage
+            saveGameData();
+        }
+
+        // Функция для сохранения данных игры в localStorage
+        function saveGameData() {
+            const gameData = {
+                balance: balance,
+                upgradeLevel: upgradeLevel,
+                clickCount: clickCount,
+                leaderboard: savedData.leaderboard
+            };
+            localStorage.setItem('gameData', JSON.stringify(gameData));
+            updateLeaderboard();
+        }
+
+        // Функция для обновления таблицы лидеров
+        function updateLeaderboard() {
+            savedData.leaderboard.push({ playerName, balance });
+            savedData.leaderboard.sort((a, b) => b.balance - a.balance); // Сортируем по убыванию баланса
+
+            // Оставляем только 5 лучших игроков
+            savedData.leaderboard = savedData.leaderboard.slice(0, 5);
+
+            // Обновляем таблицу
+            const leaderboardBody = document.getElementById("leaderboard-body");
+            leaderboardBody.innerHTML = '';
+            savedData.leaderboard.forEach((player, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${player.playerName}</td>
+                    <td>${player.balance} BTC</td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+        }
+
+        // Инициализация таблицы лидеров
+        updateLeaderboard();
     </script>
 </body>
 </html>
