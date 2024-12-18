@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tycoon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1e1e1e;
+            color: white;
+        }
+        #arrow {
+            margin: 20px;
+            font-size: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #music-control {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Вставка фоновой музыки -->
+    <audio id="background-music" loop autoplay>
+        <source src="music.mp3" type="audio/mp3">
+        Ваш браузер не поддерживает элемент audio.
+    </audio>
+
+    <h1>Crypto Tycoon</h1>
+    <div id="arrow">⬇️</div>
+    <button onclick="generateArrow()">Click Me!</button>
+
+    <div id="music-control">
+        <button onclick="toggleMusic()">Toggle Music</button>
+    </div>
+
+    <script>
+        let balance = 100; // Начальный баланс
+        let upgradePrice = 30; // Начальная цена улучшения
+        let upgradeLevel = 0; // Начальный уровень улучшения
+        let rewardMultiplier = 10; // Множитель награды
+        let btcPerClick = rewardMultiplier; // Сколько BTC дается за клик
+
+        // Функция для генерации стрелки
+        function generateArrow() {
+            let randomNumber = Math.random();
+            let arrow = document.getElementById("arrow");
+
+            if (randomNumber < 0.5) {
+                arrow.innerHTML = "⬆️"; // Стрелка вверх
+                balance += btcPerClick; // Добавляем BTC
+            } else {
+                arrow.innerHTML = "⬇️"; // Стрелка вниз
+                balance -= btcPerClick; // Убираем BTC
+            }
+
+            updateDisplay(); // Обновляем баланс на странице
+        }
+
+        // Функция обновления отображения баланса
+        function updateDisplay() {
+            document.getElementById("balance").innerHTML = "Balance: " + balance + " BTC";
+            document.getElementById("upgrade-price").innerHTML = "Upgrade Price: " + upgradePrice + " BTC";
+        }
+
+        // Функция для покупки улучшения
+        function buyUpgrade() {
+            if (balance >= upgradePrice) {
+                balance -= upgradePrice; // Вычитаем цену улучшения
+                upgradeLevel++; // Увеличиваем уровень улучшения
+                upgradePrice += 5; // Увеличиваем цену улучшения на 5 после каждой покупки
+                rewardMultiplier += 5; // Увеличиваем множитель награды на 5
+                btcPerClick = rewardMultiplier; // Обновляем количество BTC за клик
+
+                updateDisplay(); // Обновляем отображение
+            } else {
+                alert("Not enough BTC to buy upgrade!"); // Если не хватает BTC
+            }
+        }
+
+        // Функция для переключения музыки
+        function toggleMusic() {
+            var music = document.getElementById("background-music");
+            if (music.paused) {
+                music.play(); // Включить музыку, если она остановлена
+            } else {
+                music.pause(); // Остановить музыку, если она играет
+            }
+        }
+    </script>
+</body>
+</html>
