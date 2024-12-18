@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tycoon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1e1e1e;
+            color: white;
+        }
+        #arrow {
+            margin: 20px;
+            font-size: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #music-control {
+            margin-top: 20px;
+        }
+        #language-switch {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Вставка фоновой музыки -->
+    <audio id="background-music" loop autoplay>
+        <source src="music.mp3" type="audio/mp3">
+        Ваш браузер не поддерживает элемент audio.
+    </audio>
+
+    <h1 id="game-title">Crypto Tycoon</h1>
+    <div id="arrow">⬇️</div>
+    <button onclick="generateArrow()">Click Me!</button>
+
+    <div id="music-control">
+        <button onclick="toggleMusic()">Toggle Music</button>
+    </div>
+
+    <div id="balance">Balance: 100 BTC</div>
+    <div id="upgrade-price">Upgrade Price: 30 BTC</div>
+    <button onclick="buyUpgrade()">Upgrade</button>
+
+    <div id="language-switch">
+        <button onclick="switchLanguage('en')">English</button>
+        <button onclick="switchLanguage('ru')">Русский</button>
+    </div>
+
+    <script>
+        let balance = 100; // Начальный баланс
+        let upgradePrice = 30; // Начальная цена улучшения
+        let upgradeLevel = 0; // Начальный уровень улучшения
+        let rewardMultiplier = 10; // Множитель награды
+        let btcPerClick = rewardMultiplier; // Сколько BTC дается за клик
+        let boostCounter = 0; // Счётчик кликов для буста
+        let boostActive = false; // Состояние буста
+        let language = 'en'; // По умолчанию английский
+
+        // Функция для генерации стрелки
+        function generateArrow() {
+            let randomNumber = Math.random();
+            let arrow = document.getElementById("arrow");
+
+            if (randomNumber < 0.5) {
+                arrow.innerHTML = "⬆️"; // Стрелка вверх
+                balance += btcPerClick; // Добавляем BTC
+            } else {
+                arrow.innerHTML = "⬇️"; // Стрелка вниз
+                balance -= btcPerClick; // Убираем BTC
+            }
+
+            if (boostActive) {
+                if (Math.random() < 0.9) {
+                    arrow.innerHTML = "⬆️"; // Буст увеличивает шанс на стрелку вверх
+                    balance += btcPerClick * 2; // Удваиваем награду при активном бусте
+                } else {
+                    arrow.innerHTML = "⬇️";
+                    balance -= btcPerClick;
+                }
+            }
+
+            boostCounter++; // Увеличиваем счётчик кликов
+            if (boostCounter >= 100) {
+                activateBoost(); // Когда счётчик достигает 100, активируем буст
+            }
+
+            updateDisplay(); // Обновляем баланс на странице
+        }
+
+        // Функция обновления отображения баланса
+        function updateDisplay() {
+            document.getElementById("balance").innerHTML = (language === 'en' ? "Balance: " : "Баланс: ") + balance + " BTC";
+            document.getElementById("upgrade-price").innerHTML = (language === 'en' ? "Upgrade Price: " : "Цена улучшения: ") + upgradePrice + " BTC";
+            document.getElementById("game-title").innerHTML = (language === 'en' ? "Crypto Tycoon" : "Крипто Тайкун");
+        }
+
+        // Функция для покупки улучшения
+        function buyUpgrade() {
+            if (balance >= upgradePrice) {
+                balance -= upgradePrice; // Вычитаем цену улучшения
+                upgradeLevel++; // Увеличиваем уровень улучшения
+                upgradePrice += 5; // Увеличиваем цену улучшения на 5 после каждой покупки
+                rewardMultiplier += 5; // Увеличиваем множитель награды на 5
+                btcPerClick = rewardMultiplier; // Обновляем количество BTC за клик
+
+                updateDisplay(); // Обновляем отображение
+            } else {
+                alert((language === 'en' ? "Not enough BTC to buy upgrade!" : "Недостаточно BTC для улучшения!")); // Если не хватает BTC
+            }
+        }
+
+        // Функция для активации буста
+        function activateBoost() {
+            boostActive = true;
+            setTimeout(function() {
+                boostActive = false; // Деактивируем буст через 10 секунд
+                boostCounter = 0; // Сбрасываем счётчик кликов
+            }, 10000); // Буст работает 10 секунд
+        }
+
+        // Функция для переключения музыки
+        function toggleMusic() {
+            var music = document.getElementById("background-music");
+            if (music.paused) {
+                music.play(); // Включить музыку, если она остановлена
+            } else {
+                music.pause(); // Остановить музыку, если она играет
+            }
+        }
+
+        // Функция для переключения языка
+        function switchLanguage(lang) {
+            language = lang;
+            updateDisplay(); // Обновляем отображение в зависимости от выбранного языка
+        }
+    </script>
+</body>
+</html>
