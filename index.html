@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tycoon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1e1e1e;
+            color: white;
+        }
+        #arrow {
+            margin: 20px;
+            font-size: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .up {
+            color: green;
+        }
+        .down {
+            color: red;
+        }
+        #score {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #donate {
+            background-color: gold;
+            color: black;
+        }
+        #boost-bar {
+            width: 100%;
+            height: 20px;
+            background-color: grey;
+            margin-top: 20px;
+        }
+        #boost-progress {
+            height: 100%;
+            width: 0;
+            background-color: lime;
+        }
+        #boost {
+            background-color: blue;
+            color: white;
+        }
+        #language-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Таблица лидеров */
+        #leaderboard {
+            margin-top: 30px;
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        #leaderboard h2 {
+            margin-bottom: 20px;
+        }
+
+        #leaderboard table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #leaderboard th, #leaderboard td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        #leaderboard th {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="game-title">Crypto Tycoon</h1>
+    <p id="game-description">Try your luck and see if the market goes up or down!</p>
+    <div id="arrow">↔️</div>
+    <button onclick="mine()" id="mine-button">Mine Crypto</button>
+    <button id="donate" onclick="buyUpgrade()">Donate: Buy Upgrade (30 BTC)</button>
+    <button id="boost" onclick="activateBoost()" disabled>Boost</button>
+    <div id="score">Your Balance: 0 BTC</div>
+    <div id="upgrade-level">Upgrade Level: 0</div>
+    <div id="upgrade-price">Next Upgrade Price: 30 BTC</div>
+    
+    <!-- Boost bar -->
+    <div id="boost-bar">
+        <div id="boost-progress"></div>
+    </div>
+
+    <!-- Кнопка для выбора языка -->
+    <button id="language-button" onclick="toggleLanguage()">Change Language</button>
+
+    <!-- Таблица лидеров -->
+    <div id="leaderboard">
+        <h2>Leaderboard</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Balance (BTC)</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <!-- Лидеры будут отображаться здесь -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let balance = 0;
+        let upgradeLevel = 0;
+        let upgradePrice = 30; // Начальная цена улучшения
+        let clickCount = 0; // Счётчик кликов
+        let boostActive = false; // Активен ли Boost
+        let rewardMultiplier = 1; // Множитель награды
+        let rewardChance = 0.5; // Шанс выпадения стрелки вверх
+        const boostDuration = 10000; // 10 секунд
+
+        let language = 'en'; // Переменная для языка (по умолчанию английский)
+        let playerName = prompt("Enter your name:"); // Спрашиваем имя игрока при запуске
+
+        // Загружаем данные из localStorage, если они есть
+        loadGame();
+
+        // Функция для игры
+        function mine() {
+            clickCount++;
+            updateBoostBar(); // Обновление шкалы прогресса
+
+            // Случайное событие: стрелка идёт вверх или вниз
+            const result = Math.random() < rewardChance ? "up" : "down";
+            const arrow = document.getElementById("arrow");
+
+            if (result === "up") {
+                let reward = 10 * rewardMultiplier; // Если вверх, награда зависит от уровня
+                balance += reward;
+                arrow.textContent = "⬆️";
+                arrow.className = "up";
+                alert(`You earned ${reward} BTC!`);
+            } else {
+                balance -= 5; // Если вниз, отнимаем 5 BTC
+                arrow.textContent = "⬇️";
+                arrow.className = "down";
+                alert("You lost 5 BTC.");
+            }
+
+            updateDisplay();
+            saveGame(); // Сохраняем прогресс после каждого изменения
+        }
+
+        // Функция для обновления отображения
+        function updateDisplay() {
+            document.getElementById("score").textContent = `Your Balance: ${balance} BTC`;
+            document.getElementById("upgrade-level").textContent = `Upgrade Level: ${upgradeLevel}`;
+            document.getElementById("upgrade-price").textContent = `Next Upgrade Price: ${upgradePrice} BTC`;
+        }
+
+        // Функция для увеличения цены улучшения
+        function buyUpgrade() {
+            if (balance >= upgradePrice) {
+                balance -= upgradePrice;
+                upgradeLevel++;
+                upgradePrice += 5; // Увеличение цены улучшения на 5 после покупки
+                rewardMultiplier += 5; // Увеличение множителя вознаграждения
+
+                updateDisplay();
+                saveGame(); // Сохраняем прогресс после покупки улучшения
+            } else {
+                alert("Not enough BTC to buy upgrade!");
+            }
+        }
+
+        // Функция для активации Boost
+        function activateBoost() {
+            if (clickCount >= 100) {
+                boostActive = true;
+                rewardChance = 0.9; // Увеличиваем шанс выпадения стрелки вверх на 90%
+                document.getElementById("boost-progress").style.width = "100%";
+                setTimeout(() => {
+                    boostActive = false;
+                    rewardChance = 0.5; // Восстанавливаем исходный шанс
+                    document.getElementById("boost-progress").style.width = "0%";
+                }, boostDuration);
+            }
+        }
+
+        // Функция для обновления шкалы Boost
+        function updateBoostBar() {
+            if (clickCount < 100) {
+                document.getElementById("boost-progress").style.width = `${(clickCount / 100) * 100}%`;
+            }
+        }
+
+        // Функция для переключения языка
+        function toggleLanguage() {
+            if (language === 'en') {
+                language = 'ru';
+                document.getElementById("game-title").textContent = "Крипто-Тайкун";
+                document.getElementById("game-description").textContent = "Попробуйте удачу, посмотрите, вверх ли пойдет рынок или вниз!";
+                document.getElementById("mine-button").textContent = "Добывать криптовалюту";
+                document.getElementById("donate").textContent = "Пожертвовать: Купить улучшение (30 BTC)";
+                document.getElementById("boost").textContent = "Буст";
+                document.getElementById("language-button").textContent = "Изменить язык";
+            } else {
+                language = 'en';
+                document.getElementById("game-title").textContent = "Crypto Tycoon";
+                document.getElementById("game-description").textContent = "Try your luck and see if the market goes up or down!";
+                document.getElementById("mine-button").textContent = "Mine Crypto";
+                document.getElementById("donate").textContent = "Donate: Buy Upgrade (30 BTC)";
+                document.getElementById("boost").textContent = "Boost";
+                document.getElementById("language-button").textContent = "Change Language";
+            }
+        }
+
+        // Функция для сохранения игры
+        function saveGame() {
+            const gameData = {
+                balance: balance,
+                upgradeLevel: upgradeLevel,
+                upgradePrice: upgradePrice,
+                clickCount: clickCount,
+                rewardMultiplier: rewardMultiplier,
+                rewardChance: rewardChance
+            };
+            localStorage.setItem('gameData', JSON.stringify(gameData)); // Сохраняем данные игры в localStorage
+        }
+
+        // Функция
