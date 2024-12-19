@@ -1,97 +1,92 @@
 <script>
     let balance = 0;
     let upgradeLevel = 0;
-    let upgradePrice = 30; // Начальная цена улучшения
-    const upgradeIncrement = 5; // Увеличение цены на 5 после каждой покупки
-    let clickCount = 0; // Счётчик кликов
-    let boostActive = false; // Активен ли Boost
-    let rewardMultiplier = 1; // Множитель награды
-    let boostChance = 0.5; // Шанс на успех без буста
-    const boostDuration = 10000; // 10 секунд для Boost
+    let upgradePrice = 30;
+    const upgradeIncrement = 5;
+    let clickCount = 0;
 
     // Основная функция майнинга
     function mine() {
         clickCount++;
         updateBoostBar();
 
-        if (boostActive) {
-            boostChance = 0.9; // Увеличенный шанс на успех
-        }
-
-        const result = Math.random() < boostChance ? "up" : "down";
+        const result = Math.random() < 0.5 ? "up" : "down";
         const arrow = document.getElementById("arrow");
 
         if (result === "up") {
-            let reward = 10 * rewardMultiplier;
-            balance += reward;
+            balance += 10;
             arrow.textContent = "⬆️";
             arrow.className = "up";
-            alert(`You earned ${reward} BTC!`);
         } else {
             balance -= 5;
             arrow.textContent = "⬇️";
             arrow.className = "down";
-            alert("You lost 5 BTC.");
-        }
-
-        if (boostActive) {
-            boostActive = false;
-            boostChance = 0.5; // Сбрасываем шанс после Boost
         }
 
         updateDisplay();
     }
 
-    // Функция покупки улучшений
+    // Покупка улучшения
     function buyUpgrade() {
         if (balance >= upgradePrice) {
             balance -= upgradePrice;
             upgradeLevel++;
-            upgradePrice += upgradeIncrement; // Увеличиваем цену на 5
+            upgradePrice += upgradeIncrement;
             updateDisplay();
-            alert("Upgrade successful!");
         } else {
             alert("Not enough BTC!");
         }
     }
 
-    // Функция активации Boost
-    function activateBoost() {
-        if (clickCount >= 100) {
-            boostActive = true;
-            boostChance = 0.9;
-            clickCount = 0;
-            alert("Boost Activated! You now have a 90% chance to go up for 10 seconds.");
+    // Сохранение данных
+    function saveGame() {
+        const gameData = {
+            balance: balance,
+            upgradeLevel: upgradeLevel,
+            upgradePrice: upgradePrice,
+            clickCount: clickCount,
+        };
+        localStorage.setItem("cryptoTycoonSave", JSON.stringify(gameData));
+        console.log("Game saved!");
+    }
 
-            setTimeout(deactivateBoost, boostDuration);
-            document.getElementById("boost").disabled = true;
+    // Загрузка данных
+    function loadGame() {
+        const savedData = localStorage.getItem("cryptoTycoonSave");
+        if (savedData) {
+            const gameData = JSON.parse(savedData);
+            balance = gameData.balance || 0;
+            upgradeLevel = gameData.upgradeLevel || 0;
+            upgradePrice = gameData.upgradePrice || 30;
+            clickCount = gameData.clickCount || 0;
+            console.log("Game loaded!");
         } else {
-            alert("You need 100 clicks to activate Boost!");
+            console.log("No save data found. Starting a new game.");
         }
+        updateDisplay();
     }
 
-    // Отключение Boost
-    function deactivateBoost() {
-        boostActive = false;
-        boostChance = 0.5;
-        alert("Boost ended!");
-        document.getElementById("boost").disabled = false;
+    // Сброс прогресса
+    function resetGame() {
+        localStorage.removeItem("cryptoTycoonSave");
+        balance = 0;
+        upgradeLevel = 0;
+        upgradePrice = 30;
+        clickCount = 0;
+        updateDisplay();
+        alert("Game reset!");
     }
 
-    // Обновление шкалы Boost
-    function updateBoostBar() {
-        let progress = (clickCount / 100) * 100;
-        document.getElementById("boost-progress").style.width = progress + "%";
+    // Автосейв каждые 10 секунд
+    setInterval(saveGame, 10000);
 
-        if (clickCount >= 100) {
-            document.getElementById("boost").disabled = false;
-        }
-    }
-
-    // Обновление отображения игры
+    // Обновление отображения
     function updateDisplay() {
         document.getElementById("score").textContent = `Your Balance: ${balance} BTC`;
         document.getElementById("upgrade-level").textContent = `Upgrade Level: ${upgradeLevel}`;
         document.getElementById("upgrade-price").textContent = `Next Upgrade Price: ${upgradePrice} BTC`;
     }
-</script>
+
+    // Загрузка данных при запуске игры
+    loadGame();
+            </script>
